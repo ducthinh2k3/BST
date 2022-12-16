@@ -1,65 +1,79 @@
 ﻿#include <iostream>
 using namespace std;
-#define COUNT 10
 
 struct NODE {
 	int key;
 	NODE* pLeft;
 	NODE* pRight;
-	int height;
 };
 
-int Weight(NODE*& pRoot)
+int max(int a, int b)
 {
-	return Height(pRoot->pLeft) - Height(pRoot->pRight);
+	if (a > b)
+		return a;
+	else
+		return b;
 }
 
-//1. Initialize a node with key is a given value:
+//1. Initialize a NODE from a given value:
 NODE* createNode(int data)
 {
-	NODE* p = new NODE;
-	p->height = 0;
-	p->pLeft = NULL;
-	p->pRight = NULL;
-	p->key = data;
-	return p;
+	NODE* p_new = new NODE;
+	p_new->key = data;
+	p_new->pLeft = NULL;
+	p_new->pRight = NULL;
+	return p_new;
 }
 
-//2. Add a node with given value x into a given AVL tree (Notify if the given value existed):
-void rotateLeft(NODE*& pRoot)
+//2. Add a NODE with given value into a given Binary Search Tree:
+void Insert(NODE*& pRoot, int x)
 {
-	NODE* b = pRoot->pRight;
-	NODE* T2 = b->pLeft;
-	b->pLeft = pRoot;
-	pRoot->pRight = T2;
-	pRoot = b;
-
+	if (pRoot == NULL)
+	{
+		NODE* newNODE = createNode(x);
+		pRoot = newNODE;
+		return;
+	}
+	if (pRoot->key < x)
+		Insert(pRoot->pRight, x);
+	else if (pRoot->key > x)
+		Insert(pRoot->pLeft, x);
+	else
+		return;
 }
 
-void rotateRight(NODE*& pRoot)
+//3. Pre - order Traversal :
+void NLR(NODE* pRoot)
 {
-	NODE* b = pRoot->pLeft;
-	NODE* T2 = b->pRight;
-	b->pRight = pRoot;
-	pRoot->pLeft = T2;
-	pRoot->height = Weight(pRoot);
-	b->height = Weight(b);
-	pRoot = b;
-	
+	if (pRoot == NULL)
+		return;
+	cout << pRoot->key << " ";
+	NLR(pRoot->pLeft);
+	NLR(pRoot->pRight);
 }
 
-void rotateLeftRight(NODE*& pRoot)
+//4. In - order Traversal :
+void LNR(NODE* pRoot)
 {
-	rotateLeft(pRoot->pLeft);
-	rotateRight(pRoot);
+	if (pRoot == NULL)
+		return;
+	LNR(pRoot->pLeft);
+	cout << pRoot->key << " ";
+	LNR(pRoot->pRight);
 }
 
-void rotateRightLeft(NODE*& pRoot)
+//5. Post - order Traversal :
+void LRN(NODE* pRoot)
 {
-	rotateRight(pRoot->pRight);
-	rotateLeft(pRoot);
+	if (pRoot == NULL)
+		return;
+	LRN(pRoot->pLeft);
+	LRN(pRoot->pRight);
+	cout << pRoot->key << " ";
 }
 
+//7. Calculate the height of a given Binary Tree;
+// Tính chiều cao dựa vào số Node
 int Height(NODE* pRoot)
 {
 	if (pRoot == NULL)
@@ -69,40 +83,69 @@ int Height(NODE* pRoot)
 	return max(left, right) + 1;
 }
 
-void Insert(NODE*& pRoot, int x)
+//6. Level-order Traversal:
+void printLevel(NODE* pRoot, int level)
 {
 	if (pRoot == NULL)
+		return;
+	if (level == 1)
 	{
-		NODE* pnew = createNode(x);
-		pRoot = pnew;
+		cout << pRoot->key << " ";
 		return;
 	}
-	if (x < pRoot->key)
-		Insert(pRoot->pLeft, x);
-	else if (x > pRoot->key)
-		Insert(pRoot->pRight, x);
-	else
-		return;
-	// Cập nhật hệ số cho từng Node, hệ số = trái - phải
-	pRoot->height = Weight(pRoot);
-	if (pRoot->height > 1)
-	{
-		if (pRoot->pLeft->height < 0)
-			rotateLeftRight(pRoot);
-		else
-			rotateRight(pRoot);
-	}
-	else if (pRoot->height < -1)
-	{
-		if (pRoot->pRight->height > 0)
-			rotateRightLeft(pRoot);
-		else
-			rotateLeft(pRoot);
-	}
+	printLevel(pRoot->pLeft, level - 1);
+	printLevel(pRoot->pRight, level - 1);
 
 }
 
-//3. Remove a node with given value x from a given AVL tree(Notify if the given value not existed) :
+void LevelOrder(NODE* pRoot)
+{
+	if (pRoot == NULL)
+		return;
+	int height = Height(pRoot);
+	for (int i = 1; i <= height; i++)
+	{
+		printLevel(pRoot, i);
+	}
+}
+
+//8. Count the number of NODE from a given Binary Tree :
+int countNode(NODE* pRoot)
+{
+	if (pRoot == NULL)
+		return 0;
+	int cur = 0;
+	cur = 1;
+	int left = countNode(pRoot->pLeft);
+	int right = countNode(pRoot->pRight);
+	return left + right + cur;
+}
+
+//9. Calculate the total value of all NODEs from a given Binary Tree:
+int sumNode(NODE* pRoot)
+{
+	if (pRoot == NULL)
+		return 0;
+	int cur = pRoot->key;
+	int left = sumNode(pRoot->pLeft);
+	int right = sumNode(pRoot->pRight);
+	return cur + left + right;
+}
+
+//10. Find and return a NODE with given value from a given Binary Search Tree:
+NODE* Search(NODE* pRoot, int x)
+{
+	if (pRoot == NULL)
+		return NULL;
+	if (pRoot->key == x)
+		return pRoot;
+	if (pRoot->key > x)
+		return Search(pRoot->pLeft, x);
+	else
+		return Search(pRoot->pRight, x);
+}
+
+//11. Remove a NODE with given value from a given Binary Search Tree:
 NODE* maxNodeBST(NODE* pRoot)
 {
 	if (pRoot->pRight == NULL)
@@ -120,49 +163,140 @@ void Remove(NODE*& pRoot, int x)
 		Remove(pRoot->pRight, x);
 	else
 	{
-		if (pRoot->pLeft == NULL && pRoot->pRight == NULL) //Node lá
+		if (pRoot->pLeft == NULL && pRoot->pRight == NULL)
 		{
 			pRoot = NULL;
-			return;
 		}
-		else if (pRoot->pLeft != NULL && pRoot->pRight == NULL)// Node có 1 con trái
+		else if (pRoot->pLeft != NULL && pRoot->pRight == NULL)
 		{
 			pRoot = pRoot->pLeft;
-			return;
 		}
-		else if (pRoot->pLeft == NULL && pRoot->pRight != NULL)// Node có một con phải
+		else if (pRoot->pLeft == NULL && pRoot->pRight != NULL)
 		{
 			pRoot = pRoot->pRight;
-			return;
 		}
-		else // Node có 2 con
+		else
 		{
-			NODE* pTemp = maxNodeBST(pRoot->pLeft); //Lấy Node có giá trị lớn nhất bên cây con trái
+			NODE* pTemp = maxNodeBST(pRoot->pLeft);
 			pRoot->key = pTemp->key;
 			Remove(pRoot->pLeft, pTemp->key);
-			
 		}
+
 	}
-	// Cập nhật hệ số cho từng Node, hệ số = trái - phải
-	pRoot->height = Weight(pRoot);
-	if (Weight(pRoot) > 1)
+}
+
+//12. Initialize a Binary Search Tree from a given array:
+NODE* createTree(int a[], int n)
+{
+	NODE* pRoot = new NODE;
+	pRoot = NULL;
+	for (int i = 0; i < n; i++)
 	{
-		if (Weight(pRoot->pLeft) < 0)
-			rotateLeftRight(pRoot);
-		else
-			rotateRight(pRoot);
+		Insert(pRoot, a[i]);
 	}
-	else if (Weight(pRoot) < -1)
+	return pRoot;
+}
+
+//13. Completely remove a given Binary Search Tree:
+void removeTree(NODE*& pRoot)
+{
+	if (pRoot == NULL)
+		return;
+	removeTree(pRoot->pLeft);
+	removeTree(pRoot->pRight);
+	delete pRoot;
+}
+
+//14. Calculate the height of a NODE with given value: (return -1 if value not exist)
+//Tinh theo so Node
+void heightNodeTemp(NODE* pRoot, int value, int& height)
+{
+	if (pRoot == NULL)
+		return;
+	if (value == pRoot->key)
 	{
-		if (Weight(pRoot->pRight) > 0)
-			rotateRightLeft(pRoot);
-		else
-			rotateLeft(pRoot);
+		height = Height(pRoot);
+		return;
 	}
+	heightNodeTemp(pRoot->pLeft, value, height);
+	heightNodeTemp(pRoot->pRight, value, height);
+
+}
+
+int heightNode(NODE* pRoot, int value)
+{
+	int height = -1;
+	heightNodeTemp(pRoot, value, height);
+	return height;
 	
 }
 
-//4. Determine if a given Binary Tree is an AVL Tree:
+//15. * Calculate the level of a given NODE:
+void Leveltemp(NODE* pRoot, NODE* p, int level, int &result)
+{
+	if (pRoot == NULL)
+		return;
+	if (pRoot == p)
+	{
+		result = level;
+		return;
+	}
+	Leveltemp(pRoot->pLeft, p, level + 1, result);
+	Leveltemp(pRoot->pRight, p, level + 1, result);
+}
+
+int Level(NODE* pRoot, NODE* p)
+{
+	int level = 0;
+	int result = 0;
+	Leveltemp(pRoot, p, level, result);
+	return result;
+}
+
+//16. * Count the number leaves from a given Binary Tree:
+int countLeaf(NODE* pRoot)
+{
+	if (pRoot == NULL)
+		return 0;
+	int c = 0;
+	if (pRoot->pLeft == NULL && pRoot->pRight == NULL)
+	{
+		c = c + 1;
+	}
+	int left = countLeaf(pRoot->pLeft);
+	int right = countLeaf(pRoot->pRight);
+	return left + right + c;
+}
+
+//17. * Count the number of NODE from a given Binary Search Tree which key value is less than a given
+//value :
+int countLess(NODE* pRoot, int x)
+{
+	if (pRoot == NULL)
+		return 0;
+	int c = 0;
+	if (pRoot->key < x)
+		c++;
+	int left = countLess(pRoot->pLeft, x);
+	int right = countLess(pRoot->pRight, x);
+	return left + right + c;
+}
+
+/*18. * Count the number of NODE from a given Binary Search Tree which key value is greater than a
+given value*/
+int countGreater(NODE* pRoot, int x)
+{
+	if (pRoot == NULL)
+		return 0;
+	int c = 0;
+	if (pRoot->key > x)
+		c++;
+	int left = countGreater(pRoot->pLeft, x);
+	int right = countGreater(pRoot->pRight, x);
+	return left + right + c;
+}
+
+//19. Determine if a given Binary Tree is Binary Search Tree:
 int minOfTree(NODE* pRoot)
 {
 	while (pRoot->pLeft != NULL)
@@ -177,7 +311,7 @@ int maxOfTree(NODE* pRoot)
 	return pRoot->key;
 }
 
-bool isBST(NODE* pRoot) //kiểm tra cay nhi phan
+bool isBST(NODE* pRoot)
 {
 	if (pRoot == NULL)
 		return true;
@@ -186,75 +320,33 @@ bool isBST(NODE* pRoot) //kiểm tra cay nhi phan
 	return isBST(pRoot->pLeft) && isBST(pRoot->pRight);
 }
 
-bool isBalacedtemp(NODE* pRoot) // kiem tra cay can bang
+//20.Determine if a given Binary Tree is a Full Binary Search Tree
+
+bool isFullTree(NODE* pRoot)
 {
 	if (pRoot == NULL)
 		return true;
-	if (Weight(pRoot) > 1 || Weight(pRoot) < -1)
+	if (pRoot->pLeft == NULL && pRoot->pRight != NULL)
 		return false;
-	return isBalacedtemp(pRoot->pLeft) && isBalacedtemp(pRoot->pRight);
+	if (pRoot->pLeft != NULL && pRoot->pRight == NULL)
+		return false;
+	return isFullTree(pRoot->pLeft) && isFullTree(pRoot->pRight);
 }
 
-bool isBalaced(NODE* pRoot)
+bool isFullBST(NODE* pRoot)
 {
-	return isBalacedtemp(pRoot) && isBST(pRoot);
-}
-
-// Cac ham bo sung de in ra man hinh cay nhi phan tu mang 1 chieu
-NODE* createTree(int a[], int n)
-{
-	NODE* pRoot = new NODE;
-	pRoot = NULL;
-	for (int i = 0; i < n; i++)
-	{
-		Insert(pRoot, a[i]);
-	}
-	return pRoot;
-}
-
-void print2DUtil(NODE* root, int space)
-{
-	if (root == NULL)
-		return;
-
-	// Increase distance between levels
-	space += COUNT;
-
-	// Process right child first
-	print2DUtil(root->pRight, space);
-
-	// Print current node after space
-	// count
-	cout << endl;
-	for (int i = COUNT; i < space; i++)
-		cout << " ";
-	cout << root->key << "\n";
-
-	// Process left child
-	print2DUtil(root->pLeft, space);
-}
-
-// Wrapper over print2DUtil()
-void print2D(NODE* root)
-{
-	// Pass initial space count as 0
-	print2DUtil(root, 0);
+	return isFullTree(pRoot) && isBST(pRoot);
 }
 
 int main()
 {
+	// Test case
 	NODE* pRoot = new NODE;
 	pRoot = NULL;
-	//test
-	int a[7] = { 4, 2, 6, 1, 3, 5, 7 };
-	pRoot = createTree(a, 7);
-	Remove(pRoot, 4);
-	Remove(pRoot, 1);
-	Remove(pRoot, 3);
-	//Remove(pRoot, 6);
-	print2D(pRoot);
-	if (isBalaced(pRoot))
-		cout << "true" << endl;
-	else
-		cout << "false" << endl;
+	int a[9] = { 33, 14, 15, 92, 64, 35, 95, 10, 72};
+	pRoot = createTree(a, 9);
+	LNR(pRoot);
+	
+	
+
 }
